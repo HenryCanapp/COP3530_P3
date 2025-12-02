@@ -42,18 +42,19 @@ target_link_libraries(Tests PRIVATE Catch2::Catch2WithMain) #link catch to test.
 # the name here must match that of your testing executable (the one that has test.cpp)
 
 # comment everything below out if you are using CLion
-include(CTest)
-include(Catch)
-catch_discover_tests(Tests) # must be named the same as your test executable
+
+#include(CTest)
+#include(Catch)
+#catch_discover_tests(Tests) # must be named the same as yo ur test executable
 
 # Copy `data/` into the build directory so runtime can open files with `data/...`
-add_custom_target(copy_data ALL
-        COMMAND ${CMAKE_COMMAND} -E copy_directory
-                        ${CMAKE_SOURCE_DIR}/data
-                        ${CMAKE_BINARY_DIR}/data
-        COMMENT "Copying data directory to build directory"
-)
+#add_custom_target(copy_data ALL
+#        COMMAND ${CMAKE_COMMAND} -E copy_directory
+#                        ${CMAKE_SOURCE_DIR}/data
+#                        ${CMAKE_BINARY_DIR}/data
+#        COMMENT "Copying data directory to build directory"
+#)
 
 # Ensure both executables are built after the data is copied
-add_dependencies(Main copy_data)
-add_dependencies(Tests copy_data)
+#add_dependencies(Main copy_data)
+#add_dependencies(Tests copy_data)

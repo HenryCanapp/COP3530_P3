@@ -101,7 +101,23 @@ bool CampusCompass::parseCommand(const std::string& command) {
     ss >> cmd;
 
     //adding all the arguments into a list
+    //making sure to add quoted arg as one arg in quotes
+    bool composite = false;
+    std::string full = "";
     while (ss >> arg) {
+        if (composite) {
+            full += " " + arg;
+            if (arg.back() == '\"') {
+                composite = false;
+                args.push_back(full);
+            }
+            continue;
+        }
+        if (arg.front() == '\"') {
+            full = arg;
+            composite = true;
+            continue;
+        }
         args.push_back(arg);
     }
 
@@ -176,7 +192,8 @@ std::unordered_map<int, std::pair<int, int>> CampusCompass::shortestDistance(int
             int to = std::get<0>(loc);
             int dist = std::get<1>(loc);
             bool closed = std::get<2>(loc);
-            if (!closed && result[to].first < result[minID].first + dist) {
+            //second clause is overflow prevention
+            if (!closed && result[minID].first != INT_MAX && result[to].first > result[minID].first + dist) {
                 result[to].first = result[minID].first + dist;
                 result[to].second = minID;
             }
@@ -187,7 +204,7 @@ std::unordered_map<int, std::pair<int, int>> CampusCompass::shortestDistance(int
 
 bool CampusCompass::validName(std::string name) {
     //using regex developed on https://regex101.com
-    return std::regex_match(name, std::regex("^[A-Za-z\\s]+$"));
+    return std::regex_match(name, std::regex(R"(["][A-Za-z\s]+["])"));
 }
 
 bool CampusCompass::validUFID(std::string id) {

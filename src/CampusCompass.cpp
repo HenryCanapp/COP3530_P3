@@ -2,6 +2,11 @@
 
 #include <string>
 
+CampusCompass::Student::Student(std::string& name, std::string& id, int residence) {
+    this->name = name;
+    this->id = id;
+    this->residence = residence;
+}
 
 CampusCompass::CampusCompass(const std::string &edges_filepath, const std::string &classes_filepath) {
     //setting up graph and classes
@@ -202,15 +207,155 @@ std::unordered_map<int, std::pair<int, int>> CampusCompass::shortestDistance(int
     return result;
 }
 
-bool CampusCompass::validName(std::string name) {
+bool CampusCompass::validName(std::string& name) {
     //using regex developed on https://regex101.com
     return std::regex_match(name, std::regex(R"(["][A-Za-z\s]+["])"));
 }
 
-bool CampusCompass::validUFID(std::string id) {
+bool CampusCompass::validUFID(std::string& id) {
     return std::regex_match(id, std::regex("^[0-9]{8}$"));
 }
 
-bool CampusCompass::validClassCode(std::string code) {
-    return std::regex_match(code, std::regex("^[A-Z]{3}[0-9]{4}$"));
+bool CampusCompass::validClassCode(std::string& code) {
+    if (std::regex_match(code, std::regex("^[A-Z]{3}[0-9]{4}$"))) {
+        if (classes.count(code)) {
+            return true;
+        }
+    }
+    return false;
 }
+
+bool CampusCompass::validLocID(int id) {
+    if (id > 0 && id < graph.size()) {
+        return true;
+    }
+    return false;
+}
+
+bool CampusCompass::insertStudent(std::vector<std::string>& args) {
+    //checks if name is formatted correctly
+    if (!validName(args[0])) {
+        return false;
+    }
+    std::string name = args[0].substr(0, args[0].size() - 2);
+
+    //checks if id is formatted correctly
+    if (!validUFID(args[1])) {
+        return false;
+    }
+    std::string ufid = args[1];
+
+    //checks if resisdence location is real
+    int residence = std::stoi(args[2]);
+    if (!validLocID(residence)) {
+        return false;
+    }
+
+    //creates the student
+    Student newStudent(name, ufid, residence);
+
+    //checks if an appropriate number of classes is listed
+    int n = stoi(args[3]);
+    if (n < 1 || n > 6) {
+        return false;
+    }
+
+    //checks if there are actually that many classes given
+    if (args.size() - 4 != n) {
+        return false;
+    }
+
+    //adds each class
+    for (int i = 4; i < n+4; i++) {
+        //validates class format+in the list of classes
+        if (!validClassCode(args[i])) {
+            return false;
+        }
+        //default value to be overwritten
+        newStudent.classes[args[i]] = -1;
+    }
+
+    //add student and then update their shortest path variables
+    students[ufid] = newStudent;
+    updateStudent(ufid);
+
+    std::cout << "successful" << std::endl;
+    return true;
+}
+
+bool CampusCompass::removeStudent(std::vector<std::string>& args) {
+    //checks format
+    if (!validUFID(args[0])) {
+        return false;
+    }
+    if (students.count(args[0])) {
+        students.erase(args[0]);
+        std::cout << "successful" << std::endl;
+        return true;
+    }
+    return false;
+}
+
+bool CampusCompass::dropClass(std::vector<std::string>& args) {
+    if (!validUFID(args[0])) {
+        return false;
+    }
+
+    if (!students.count(args[0])) {
+        return false;
+    }
+
+    if (!validClassCode(args[1])) {
+        return false;
+    }
+
+    Student& stu = students[args[0]];
+    if (stu.classes.count(args[1])) {
+        stu.classes.erase(args[1]);
+        if (stu.classes.empty()) {
+            students.erase(args[0]);
+        } else {
+            updateStudent(args[0]);
+        }
+        std::cout << "successful" << std::endl;
+        return true;
+    }
+    return false;
+}
+
+bool CampusCompass::replaceClass(std::vector<std::string>& args) {
+    if (!validUFID(args[0])) {
+        return false;
+    }
+
+    if (!validClassCode(args[1]) || !validUFID(args[2])) {
+        return false;
+    }
+
+    if (students[args[0]].classes.count(args[2])) {
+        std::vector drop_args(args.begin(), args.begin() + 2);
+        if (dropClass(drop_args)) {
+            students[args[0]].classes[args[2]] = -1;
+            updateStudent(args[0]);
+            std::cout << "successful" << std::endl;
+            return true;
+        }
+    }
+    return false;
+}
+
+bool CampusCompass::removeClass(std::vector<std::string>& args) {
+    if (!validClassCode(args[0])) {
+        return false;
+    }
+
+    int amnt = 0;
+    for (auto&[id, obj] : students) {
+        if (std::vector drop_args = {id, args[0]}; dropClass(drop_args)) {
+            amnt++;
+        }
+    }
+    std::cout << amnt << std::endl;
+    return true;
+}
+

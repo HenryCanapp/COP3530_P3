@@ -20,11 +20,13 @@ private:
         std::string id;
         std::string name;
         //location id of their residence
-        std::string residence;
+        int residence;
         //list of their classes and the shortest time from their residence
         std::map<std::string, int> classes;
         //list of shortest path edges to desired class in order dijkstra's alg (from, list of proceeding edges)
         std::unordered_map<int, std::vector<int>> paths;
+
+        Student(std::string& name, std::string& id, int residence);
     };
 
     //an adjacency list in the form of <id_from, vector<tuple<id_to, weight/time, closure>>>
@@ -51,46 +53,18 @@ public:
     //checks command validity then executes function
     bool parseCommand(const std::string& command);
 
-    /*todo
-     * Insert the student into the list given a specific name and ufid
-     * add each cladd into the students classes
-     * call update student after the classes have been added which will update
-     *  all the shortest distance data
-     * Data validation at each step
-     * Student has classes from 1-6
-     * prints successful
-     */
     //checks if correct args then adds student to students list
     bool insertStudent(std::vector<std::string>& args);
 
-    /*todo
-     * simply removes the student from the list
-     * prints successful
-     */
     //checks if correct args then removes student from the list
     bool removeStudent(std::vector<std::string>& args);
 
-    /*todo
-     * removes class from a student
-     * if a student has no classes left, remove student
-     * must also call update student
-     * prints successful
-     */
     //checks if correct args then drops the sepcified class for that student
     bool dropClass(std::vector<std::string>& args);
 
-    /*todo
-     * swaps class around
-     * calls update student
-     * prints successful
-     */
     //checks if correct args then replaces classes as specified for that student
     bool replaceClass(std::vector<std::string>& args);
 
-    /*todo
-     * repeatedly call drop class on every student with specified class
-     * prints number of students affected
-     */
     //checks args and removes class from every student, outputs how many times removed
     bool removeClass(std::vector<std::string>& args);
 
@@ -145,7 +119,8 @@ public:
     void updateStudent(std::string id);
 
     //following functions are all for data validation
-    bool validUFID(std::string id);
-    bool validName(std::string name);
-    bool validClassCode(std::string code);
+    bool validUFID(std::string& id);
+    bool validName(std::string& name);
+    bool validClassCode(std::string& code);
+    bool validLocID(int id);
 };

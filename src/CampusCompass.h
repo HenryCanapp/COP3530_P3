@@ -4,12 +4,15 @@
 #include <unordered_map>
 #include <map>
 #include <vector>
+#include <queue>
+#include <set>
 #include <iostream>
 #include <fstream>
 #include <sstream>
 #include <climits>
 #include <unordered_set>
 #include <regex>
+
 
 
 class CampusCompass {
@@ -68,33 +71,15 @@ public:
     //checks args and removes class from every student, outputs how many times removed
     bool removeClass(std::vector<std::string>& args);
 
-    /*todo
-     * toggles the closure bool of each edge specified
-     * must call update student on every student
-     * prints successful
-     */
     //checks args and toggles edges closure
     bool toggleEdgesClosure(std::vector<std::string>& args);
 
-    /*todo
-     * prints whether an edge is open, closes, or DNE
-     */
     //checks args and checks edges status
     bool checkEdgeStatus(std::vector<std::string>& args);
 
-    /*todo
-     * checks if there is a path between two points
-     * best method is prolly just a breadth first search
-     * prints successful
-     */
     //checks args then checks if connected
     bool isConnected(std::vector<std::string>& args);
 
-    /*todo
-     * simple access/reading of the already made shortest pasths data
-     * prints each class code and the total time
-     * interpret INT_MAX as unreachable and print a time of -1
-     */
     //checks args then prints student's shortest path
     bool printShortestEdges(std::vector<std::string>& args);
 
@@ -106,17 +91,11 @@ public:
     //checks args then prints the studnets zone
     bool printStudentZone(std::vector<std::string>& args);
 
-    //Dijkstra's alg for shortest distance to every node from start
+    //Dijkstra's alg for shortest distance to every node from start in form of <to, <distance, pre>>
     std::unordered_map<int, std::pair<int, int>> shortestDistance(int start);
 
-    /*todo
-     * finds the shortest distance to each class from the place of residence
-     * updates the classes list with appropriate time values
-     * updates the paths list on how to get to each class
-     * how to handle unreachable classes?
-     */
     //updates students shortest distance data
-    void updateStudent(std::string id);
+    void updateStudent(std::string& id);
 
     //following functions are all for data validation
     bool validUFID(std::string& id);

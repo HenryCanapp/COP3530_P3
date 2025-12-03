@@ -309,9 +309,11 @@ bool CampusCompass::dropClass(std::vector<std::string>& args) {
         return false;
     }
 
+    //first checks if student is enrolled in class
     Student& stu = students[args[0]];
     if (stu.classes.count(args[1])) {
         stu.classes.erase(args[1]);
+        //checks if student needs to be removed or updated
         if (stu.classes.empty()) {
             students.erase(args[0]);
         } else {
@@ -332,7 +334,9 @@ bool CampusCompass::replaceClass(std::vector<std::string>& args) {
         return false;
     }
 
-    if (students[args[0]].classes.count(args[2])) {
+    //checks if student is already enrolled in new class
+    if (!students[args[0]].classes.count(args[2])) {
+        //drops the old class and adds the new class
         std::vector drop_args(args.begin(), args.begin() + 2);
         if (dropClass(drop_args)) {
             students[args[0]].classes[args[2]] = -1;
@@ -349,6 +353,7 @@ bool CampusCompass::removeClass(std::vector<std::string>& args) {
         return false;
     }
 
+    //checks if each student has a class, if they do, then drop the class
     int amnt = 0;
     for (auto&[id, obj] : students) {
         if (std::vector drop_args = {id, args[0]}; dropClass(drop_args)) {
@@ -359,3 +364,118 @@ bool CampusCompass::removeClass(std::vector<std::string>& args) {
     return true;
 }
 
+bool CampusCompass::checkEdgeStatus(std::vector<std::string>& args) {
+    int from = std::stoi(args[0]);
+    int to = std::stoi(args[1]);
+    if (!validLocID(from) || !validLocID(to)) {
+        std::cout << "DNE" << std::endl;
+        return true;
+    }
+    //finds the edge and then reads it's status
+    std::string result = "DNE";
+    for (auto [id, dist, closed] : graph[from]) {
+        if (id == to) {
+             result = closed ? "closed" : "open";
+        }
+    }
+    std::cout << result << std::endl;
+    return true;
+}
+
+bool CampusCompass::toggleEdgesClosure(std::vector<std::string>& args) {
+    //checks there are the correct number of arguments
+    int n = std::stoi(args[0]);
+    if (args.size() != 2*n + 1) {
+        return false;
+    }
+    //goes through each edge pair
+    for (int i = 1; i < 2*n + 1; i += 2) {
+        int from = std::stoi(args[i]);
+        int to = std::stoi(args[i+1]);
+        if (!validLocID(from) || !validLocID(to)) {
+            return false;
+        }
+        //flips the closed status in both vertices edge lists
+        for (auto& edge : graph[from]) {
+            if (std::get<0>(edge) == to) {
+                std::get<2>(edge) = !std::get<2>(edge);
+                break;
+            }
+            return false;
+        }
+        for (auto& edge : graph[to]) {
+            if (std::get<0>(edge) == from) {
+                std::get<2>(edge) = !std::get<2>(edge);
+                break;
+            }
+            return false;
+        }
+    }
+    std::cout << "successful" << std::endl;
+    return true;
+}
+
+bool CampusCompass::isConnected(std::vector<std::string>& args) {
+    int from = std::stoi(args[0]);
+    int to = std::stoi(args[1]);
+    if (!validLocID(from) || !validLocID(to)) {
+        return false;
+    }
+    //breadth first search using a queue
+    std::queue<int> qu;
+    qu.push(from);
+    std::set<int> checked;
+    while (!qu.empty()) {
+        int top = qu.front();
+        qu.pop();
+        checked.insert(top);
+        for (auto [id, dist, closed] : graph[top]) {
+            if (closed) {continue;}
+            if (id == to) {
+                std::cout << "successful" << std::endl;
+                return true;
+            }
+            if (!checked.count(id)) {
+                qu.push(id);
+                checked.insert(id);
+            }
+        }
+    }
+    return false;
+}
+
+void CampusCompass::updateStudent(std::string& id) {
+    Student& stu = students[id];
+    int start = stu.residence;
+    //get the dijkstra's list of shortest distances
+    auto dj_list = shortestDistance(start);
+    //go through each class a student has and update the distance values and path
+    for (auto& dest : stu.classes) {
+        int loc_id = classes[dest.first];
+        if (dj_list[loc_id].first != INT_MAX) {
+            //sets the distance to correct value
+            dest.second = dj_list[loc_id].first;
+            //create the path from dest to residence
+            std::vector<int> path;
+            int from = dj_list[loc_id].second;
+            while (from != start) {
+                path.push_back(from);
+                from = dj_list[from].second;
+            }
+            stu.paths[loc_id] = path;
+        }
+    }
+}
+
+bool CampusCompass::printShortestEdges(std::vector<std::string>& args) {
+    if (!validUFID(args[0])) {
+        return false;
+    }
+    Student& stu = students[args[0]];
+    std::cout << "Name: " << stu.name << std::endl;
+    //prints the time distance to each class
+    for (const auto&[class_name, time] : stu.classes) {
+        std::cout << class_name << " | Total Time: " << time << std::endl;
+    }
+    return true;
+}

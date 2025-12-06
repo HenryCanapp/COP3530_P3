@@ -128,21 +128,13 @@ successful
   };
 
   SECTION("gradescope 5") {
-    input = R"(6
-checkEdgeStatus 1 2
-toggleEdgesClosure 1 1 2
-checkEdgeStatus 1 2
-checkEdgeStatus 2 1
-checkEdgeStatus 1 3
-checkEdgeStatus 1 99
+    input = R"(2
+insert "John Doe" 88887777 5 4 IDS2935 CEN3031 CIS4301 CNT4007
+printStudentZone 88887777
 )";
 
-    expectedOutput = R"(open
-successful
-closed
-closed
-DNE
-DNE
+    expectedOutput = R"(successful
+Student Zone Cost For John Doe: 20
 )";
   };
 

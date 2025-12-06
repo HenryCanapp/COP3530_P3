@@ -554,6 +554,7 @@ bool CampusCompass::printStudentZone(std::vector<std::string> &args, std::string
     //create a set of all the locations traveled to to get to classes
     auto& paths = students[args[0]]->paths;
     std::set<int> locations;
+    locations.insert(students[args[0]]->residence);
     for (auto it = paths.begin(); it != paths.end(); ++it) {
         locations.insert(it->first);
         for (int fol : it->second) {

@@ -8,6 +8,13 @@ CampusCompass::Student::Student(std::string& name, std::string& id, int residenc
     this->residence = residence;
 }
 
+CampusCompass::~CampusCompass() {
+    for (auto& student : students) {
+        delete student.second;
+        student.second = nullptr;
+    }
+}
+
 CampusCompass::CampusCompass(const std::string &edges_filepath, const std::string &classes_filepath) {
     //setting up graph and classes
     parseCSV(edges_filepath, classes_filepath);
@@ -230,7 +237,7 @@ bool CampusCompass::validClassCode(std::string& code) {
 }
 
 bool CampusCompass::validLocID(int id) {
-    if (id > 0 && id < graph.size()) {
+    if (id > 0 && id < static_cast<int>(graph.size())) {
         return true;
     }
     return false;
@@ -256,7 +263,7 @@ bool CampusCompass::insertStudent(std::vector<std::string>& args) {
     }
 
     //creates the student
-    Student newStudent(name, ufid, residence);
+    Student* newStudent = new Student(name, ufid, residence);
 
     //checks if an appropriate number of classes is listed
     int n = stoi(args[3]);
@@ -265,7 +272,7 @@ bool CampusCompass::insertStudent(std::vector<std::string>& args) {
     }
 
     //checks if there are actually that many classes given
-    if (args.size() - 4 != n) {
+    if (static_cast<int>(args.size()) - 4 != n) {
         return false;
     }
 
@@ -276,7 +283,7 @@ bool CampusCompass::insertStudent(std::vector<std::string>& args) {
             return false;
         }
         //default value to be overwritten
-        newStudent.classes[args[i]] = -1;
+        newStudent->classes[args[i]] = -1;
     }
 
     //add student and then update their shortest path variables
@@ -314,7 +321,7 @@ bool CampusCompass::dropClass(std::vector<std::string>& args) {
     }
 
     //first checks if student is enrolled in class
-    Student& stu = students[args[0]];
+    Student& stu = *students[args[0]];
     if (stu.classes.count(args[1])) {
         stu.classes.erase(args[1]);
         //checks if student needs to be removed or updated
@@ -339,11 +346,11 @@ bool CampusCompass::replaceClass(std::vector<std::string>& args) {
     }
 
     //checks if student is already enrolled in new class
-    if (!students[args[0]].classes.count(args[2])) {
+    if (!students[args[0]]->classes.count(args[2])) {
         //drops the old class and adds the new class
         std::vector drop_args(args.begin(), args.begin() + 2);
         if (dropClass(drop_args)) {
-            students[args[0]].classes[args[2]] = -1;
+            students[args[0]]->classes[args[2]] = -1;
             updateStudent(args[0]);
             std::cout << "successful" << std::endl;
             return true;
@@ -389,7 +396,7 @@ bool CampusCompass::checkEdgeStatus(std::vector<std::string>& args) {
 bool CampusCompass::toggleEdgesClosure(std::vector<std::string>& args) {
     //checks there are the correct number of arguments
     int n = std::stoi(args[0]);
-    if (args.size() != 2*n + 1) {
+    if (static_cast<int>(args.size()) != 2*n + 1) {
         return false;
     }
     //goes through each edge pair
@@ -449,7 +456,7 @@ bool CampusCompass::isConnected(std::vector<std::string>& args) {
 }
 
 void CampusCompass::updateStudent(std::string& id) {
-    Student& stu = students[id];
+    Student& stu = *students[id];
     int start = stu.residence;
     //get the dijkstra's list of shortest distances
     auto dj_list = shortestDistance(start);
@@ -475,7 +482,7 @@ bool CampusCompass::printShortestEdges(std::vector<std::string>& args) {
     if (!validUFID(args[0])) {
         return false;
     }
-    Student& stu = students[args[0]];
+    Student& stu = *students[args[0]];
     std::cout << "Name: " << stu.name << std::endl;
     //prints the time distance to each class
     for (const auto&[class_name, time] : stu.classes) {
@@ -526,7 +533,7 @@ bool CampusCompass::printStudentZone(std::vector<std::string> &args) {
         return false;
     }
     //create a set of all the locations traveled to to get to classes
-    auto& paths = students[args[0]].paths;
+    auto& paths = students[args[0]]->paths;
     std::set<int> locations;
     for (auto it = paths.begin(); it != paths.end(); ++it) {
         locations.insert(it->first);
@@ -549,6 +556,6 @@ bool CampusCompass::printStudentZone(std::vector<std::string> &args) {
             }
         }
     }
-    std::cout << "Student Zone Cost For " << students[args[0]].name << ": " << total_cost << std::endl;
+    std::cout << "Student Zone Cost For " << students[args[0]]->name << ": " << total_cost << std::endl;
     return true;
 }

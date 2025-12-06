@@ -40,13 +40,16 @@ private:
     std::unordered_map<std::string, int> classes;
 
     //list of students accessible via their id
-    std::map<std::string, Student> students;
+    std::map<std::string, Student*> students;
 
     //simple list for available commands
     std::unordered_map<std::string, int> commands;
 public:
     // Think about what helper functions you will need in the algorithm
     CampusCompass(const std::string& edges_filepath, const std::string& classes_filepath); // constructor
+
+    //destructor since students uses dynamically allocated memory
+    ~CampusCompass();
 
     //reads the CSV file and converts it into 2D array, code taken from guide on canvas
     static std::vector<std::vector<std::string>> readCSV(const std::string& filename);

@@ -30,7 +30,7 @@ std::vector<std::vector<std::string>> CampusCompass::readCSV(const std::string& 
     std::ifstream file(filename);
 
     if (!file.is_open()) {
-        std::cerr << "Failed to open file: " << filename << std::endl;
+        std::cout << "Failed to open file: " << filename << std::endl;
         return data;
     }
 

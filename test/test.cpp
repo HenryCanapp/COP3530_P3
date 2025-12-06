@@ -4,7 +4,7 @@
 // change if you choose to use a different header name
 #include "CampusCompass.h"
 
-using namespace std;
+
 
 // the syntax for defining a test is below. It is important for the name to be
 // unique, but you can group multiple tests with [tags]. A test can have
@@ -48,11 +48,12 @@ TEST_CASE("Test 2", "[tag]") {
 
 // This uses C++ "raw strings" and assumes your CampusCompass outputs a string with
 //   the same thing you print.
-TEST_CASE("Example CampusCompass Output Test", "[flag]") {
-  // the following is a "raw string" - you can write the exact input (without
-  //   any indentation!) and it should work as expected
-  // this is based on the input and output of the first public test case
-  string input = R"(6
+TEST_CASE("Default test cases", "[default]") {
+  std::string input;
+  std::string expectedOutput;
+
+  SECTION("gradescope 1") {
+    input = R"(6
 insert "Student A" 10000001 1 1 COP3502
 insert "Student B" 10000002 1 1 COP3502
 insert "Student C" 10000003 1 2 COP3502 MAC2311
@@ -61,16 +62,36 @@ remove 10000001
 removeClass COP3502
 )";
 
-  string expectedOutput = R"(successful
+    expectedOutput = R"(successful
 successful
 successful
 successful
 unsuccessful
 2
 )";
+  };
 
+
+  SECTION("gradescope 2") {
+    input = R"(6
+checkEdgeStatus 1 2
+toggleEdgesClosure 1 1 2
+checkEdgeStatus 1 2
+checkEdgeStatus 2 1
+checkEdgeStatus 1 3
+checkEdgeStatus 1 99
+)";
+
+    expectedOutput = R"(open
+successful
+closed
+closed
+DNE
+DNE
+)";
+  };
   CampusCompass compass("../data/edges.csv", "../data/classes.csv");
-  string actualOutput;
+  std::string actualOutput;
 
   // somehow pass your input into your CampusCompass and parse it to call the
   // correct functions, for example:
@@ -83,11 +104,12 @@ unsuccessful
 
   std::stringstream output;
   for (int i = 0; i < no_of_lines; i++) {
-    std::getline(inp, command);
-
+    while (!command.compare("")) {
+      std::getline(inp, command);
+    }
     // parse commands and add to the output
     compass.parseCommand(command, output);
-
+    command = "";
   }
 
   actualOutput = output.str();

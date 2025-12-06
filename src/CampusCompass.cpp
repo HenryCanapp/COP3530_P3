@@ -72,17 +72,17 @@ void CampusCompass::parseCSV(const std::string& edges_filepath, const std::strin
         int second_id = std::stoi(row[1]);
         int weight = std::stoi(row[4]);
         //adding edge to first id's list
-        if (graph.count(first_id)) {
+        if (!graph.count(first_id)) {
             std::vector<std::tuple<int, int, bool>> edges;
             graph[first_id] = edges;
         }
         graph[first_id].emplace_back(second_id, weight, false);
         //adding edge to second id's list
-        if (graph.count(first_id)) {
+        if (!graph.count(second_id)) {
             std::vector<std::tuple<int, int, bool>> edges;
-            graph[first_id] = edges;
+            graph[second_id] = edges;
         }
-        graph[first_id].emplace_back(second_id, weight, false);
+        graph[second_id].emplace_back(first_id, weight, false);
     }
 
     auto classes_data = readCSV(classes_filepath);
@@ -412,18 +412,26 @@ bool CampusCompass::toggleEdgesClosure(std::vector<std::string>& args, std::stri
             return false;
         }
         //flips the closed status in both vertices edge lists
+        bool inList = false;
         for (auto& edge : graph[from]) {
             if (std::get<0>(edge) == to) {
                 std::get<2>(edge) = !std::get<2>(edge);
+                inList = true;
                 break;
             }
+        }
+        if (!inList) {
             return false;
         }
+        inList = false;
         for (auto& edge : graph[to]) {
             if (std::get<0>(edge) == from) {
                 std::get<2>(edge) = !std::get<2>(edge);
+                inList = true;
                 break;
             }
+        }
+        if (!inList) {
             return false;
         }
     }

@@ -96,7 +96,7 @@ void CampusCompass::parseCSV(const std::string& edges_filepath, const std::strin
 }
 
 bool CampusCompass::parseCommand(const std::string& command) {
-    bool is_valid = false;
+
     std::vector<std::string> args;
     std::stringstream ss(command);
     std::string arg;
@@ -131,6 +131,7 @@ bool CampusCompass::parseCommand(const std::string& command) {
     if (!commands.count(cmd)) {
         call = commands.at(cmd);
     }
+    bool is_valid = false;
     switch (call) {
         case 0:
             is_valid = insertStudent(args);
@@ -161,6 +162,9 @@ bool CampusCompass::parseCommand(const std::string& command) {
             break;
         case 9:
             is_valid = printStudentZone(args);
+            break;
+        default:
+            is_valid = false;
             break;
     }
     return is_valid;
@@ -477,5 +481,74 @@ bool CampusCompass::printShortestEdges(std::vector<std::string>& args) {
     for (const auto&[class_name, time] : stu.classes) {
         std::cout << class_name << " | Total Time: " << time << std::endl;
     }
+    return true;
+}
+
+std::unordered_map<int, std::vector<std::pair<int, int>>> CampusCompass::findMST(std::set<int>& locations) {
+    std::unordered_map<int, std::vector<std::pair<int, int>>> mst;
+    //start with an arbitrary location
+    int first = *locations.begin();
+    mst[first] = std::vector<std::pair<int, int>>();
+
+    while (mst.size() != locations.size()) {
+        //find the abs_shortest edges among all available edges in form of <from, <to, dist>>
+        std::pair<int, std::pair<int, int>> abs_shortest = std::make_pair(0, std::make_pair(0, INT_MAX));
+        for (auto it = mst.begin(); it != mst.end(); it++) {
+            int curr = it->first;
+            //find it's shortest edge to a vertex in the subgraph NOT already added
+            for (auto [loc, dist, closed] : graph[curr]) {
+                //only adds edges that meet mst criteria
+                if (!closed && locations.count(loc) && !mst.count(loc)) {
+                    if (dist < abs_shortest.second.second) {
+                        abs_shortest.second.first = loc;
+                        abs_shortest.second.second = dist;
+                        abs_shortest.first = curr;
+                    }
+                }
+            }
+        }
+        int from = abs_shortest.first;
+        int to = abs_shortest.second.first;
+        //add the edge to the first vertex's list
+        mst[from].push_back(abs_shortest.second);
+        //add the vertex if it doesn't exist
+        if (!mst.count(to)) {
+            mst[to] = std::vector<std::pair<int, int>>();
+        }
+        //add the edge to the second vertex's list
+        mst[to].push_back(std::make_pair(from, abs_shortest.second.second));
+    }
+    return mst;
+}
+
+bool CampusCompass::printStudentZone(std::vector<std::string> &args) {
+    if (!validUFID(args[0])) {
+        return false;
+    }
+    //create a set of all the locations traveled to to get to classes
+    auto& paths = students[args[0]].paths;
+    std::set<int> locations;
+    for (auto it = paths.begin(); it != paths.end(); ++it) {
+        locations.insert(it->first);
+        for (int fol : it->second) {
+            locations.insert(fol);
+        }
+    }
+    auto mst = findMST(locations);
+    std::set<std::pair<int, int>> seen;
+    int total_cost = 0;
+    //sum the cost of all the edges in
+    for (auto it = mst.begin(); it != mst.end(); ++it) {
+        for (auto [loc, dist] : it->second) {
+            std::pair<int, int> edge1 = std::make_pair(it->first, loc);
+            std::pair<int, int> edge2 = std::make_pair(loc, it->first);
+            //ensuring that this is a unique edge not already counted
+            if (!seen.count(edge1) && !seen.count(edge2)) {
+                total_cost += dist;
+                seen.insert(edge1);
+            }
+        }
+    }
+    std::cout << "Student Zone Cost For " << students[args[0]].name << ": " << total_cost << std::endl;
     return true;
 }

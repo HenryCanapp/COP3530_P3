@@ -12,6 +12,7 @@
 #include <climits>
 #include <unordered_set>
 #include <regex>
+#include <algorithm>
 
 
 
@@ -91,6 +92,9 @@ public:
     //checks args then prints the studnets zone
     bool printStudentZone(std::vector<std::string>& args);
 
+    //given a list of edges, uses prims alg to find an MST sub graph
+    std::unordered_map<int, std::vector<std::pair<int, int>>> findMST(std::set<int>& locations);
+
     //Dijkstra's alg for shortest distance to every node from start in form of <to, <distance, pre>>
     std::unordered_map<int, std::pair<int, int>> shortestDistance(int start);
 
@@ -102,4 +106,6 @@ public:
     bool validName(std::string& name);
     bool validClassCode(std::string& code);
     bool validLocID(int id);
+
+
 };

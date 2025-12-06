@@ -249,7 +249,7 @@ bool CampusCompass::insertStudent(std::vector<std::string>& args, std::stringstr
     if (!validName(args[0])) {
         return false;
     }
-    std::string name = args[0].substr(0, args[0].size() - 2);
+    std::string name = args[0].substr(1, args[0].size() - 2);
 
     //checks if id is formatted correctly
     if (!validUFID(args[1])) {
@@ -435,6 +435,12 @@ bool CampusCompass::toggleEdgesClosure(std::vector<std::string>& args, std::stri
             return false;
         }
     }
+
+    //update the students
+    for (auto& [name, obj] : students) {
+        updateStudent(obj->id);
+    }
+
     out << "successful" << std::endl;
     return true;
 }

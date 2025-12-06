@@ -90,6 +90,62 @@ DNE
 DNE
 )";
   };
+
+  SECTION("gradescope 3") {
+    input = R"(5
+isConnected 33 52
+toggleEdgesClosure 1 33 52
+isConnected 33 52
+toggleEdgesClosure 1 33 52
+isConnected 33 52
+)";
+
+    expectedOutput = R"(successful
+successful
+unsuccessful
+successful
+successful
+)";
+  };
+
+  SECTION("gradescope 4") {
+    input = R"(5
+insert "Jane Doe" 12121212 1 1 IDS2935
+printShortestEdges 12121212
+toggleEdgesClosure 1 1 4
+printShortestEdges 12121212
+toggleEdgesClosure 1 1 4
+)";
+
+    expectedOutput = R"(successful
+Name: Jane Doe
+IDS2935 | Total Time: 13
+successful
+Name: Jane Doe
+IDS2935 | Total Time: 17
+successful
+)";
+  };
+
+  SECTION("gradescope 5") {
+    input = R"(6
+checkEdgeStatus 1 2
+toggleEdgesClosure 1 1 2
+checkEdgeStatus 1 2
+checkEdgeStatus 2 1
+checkEdgeStatus 1 3
+checkEdgeStatus 1 99
+)";
+
+    expectedOutput = R"(open
+successful
+closed
+closed
+DNE
+DNE
+)";
+  };
+
   CampusCompass compass("../data/edges.csv", "../data/classes.csv");
   std::string actualOutput;
 

@@ -69,16 +69,28 @@ unsuccessful
 2
 )";
 
+  CampusCompass compass("../data/edges.csv", "../data/classes.csv");
   string actualOutput;
 
   // somehow pass your input into your CampusCompass and parse it to call the
   // correct functions, for example:
-  /*
-  CampusCompass c;
-  c.parseInput(input)
-  // this would be some function that sends the output from your class into a string for use in testing
-  actualOutput = c.getStringRepresentation()
-  */
+
+  std::stringstream inp(input);
+  int no_of_lines;
+  std::string command;
+  inp >> no_of_lines;
+  inp.ignore(); // ignore newline that first cin left over
+
+  std::stringstream output;
+  for (int i = 0; i < no_of_lines; i++) {
+    std::getline(inp, command);
+
+    // parse commands and add to the output
+    compass.parseCommand(command, output);
+
+  }
+
+  actualOutput = output.str();
 
   REQUIRE(actualOutput == expectedOutput);
 }

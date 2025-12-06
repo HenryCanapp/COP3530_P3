@@ -58,42 +58,37 @@ public:
     void parseCSV(const std::string& edges_filepath, const std::string& classes_filepath);
 
     //checks command validity then executes function
-    bool parseCommand(const std::string& command);
+    bool parseCommand(const std::string& command, std::stringstream& out);
 
     //checks if correct args then adds student to students list
-    bool insertStudent(std::vector<std::string>& args);
+    bool insertStudent(std::vector<std::string>& args, std::stringstream& out);
 
     //checks if correct args then removes student from the list
-    bool removeStudent(std::vector<std::string>& args);
+    bool removeStudent(std::vector<std::string>& args, std::stringstream& out);
 
     //checks if correct args then drops the sepcified class for that student
-    bool dropClass(std::vector<std::string>& args);
+    bool dropClass(std::vector<std::string>& args, std::stringstream& out);
 
     //checks if correct args then replaces classes as specified for that student
-    bool replaceClass(std::vector<std::string>& args);
+    bool replaceClass(std::vector<std::string>& args, std::stringstream& out);
 
     //checks args and removes class from every student, outputs how many times removed
-    bool removeClass(std::vector<std::string>& args);
+    bool removeClass(std::vector<std::string>& args, std::stringstream& out);
 
     //checks args and toggles edges closure
-    bool toggleEdgesClosure(std::vector<std::string>& args);
+    bool toggleEdgesClosure(std::vector<std::string>& args, std::stringstream& out);
 
     //checks args and checks edges status
-    bool checkEdgeStatus(std::vector<std::string>& args);
+    bool checkEdgeStatus(std::vector<std::string>& args, std::stringstream& out);
 
     //checks args then checks if connected
-    bool isConnected(std::vector<std::string>& args);
+    bool isConnected(std::vector<std::string>& args, std::stringstream& out);
 
     //checks args then prints student's shortest path
-    bool printShortestEdges(std::vector<std::string>& args);
+    bool printShortestEdges(std::vector<std::string>& args, std::stringstream& out);
 
-    /*todo
-     * operates on the built in data structure
-     * prints the total cost of the built MST
-     * ignore unreachable classes?
-     */
     //checks args then prints the studnets zone
-    bool printStudentZone(std::vector<std::string>& args);
+    bool printStudentZone(std::vector<std::string>& args, std::stringstream& out);
 
     //given a list of edges, uses prims alg to find an MST sub graph
     std::unordered_map<int, std::vector<std::pair<int, int>>> findMST(std::set<int>& locations);

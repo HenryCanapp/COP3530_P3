@@ -5,7 +5,7 @@
 
 int main() {
     // initialize your main project object
-    CampusCompass compass("../data/edges.csv", "../data/classes.csv");
+    CampusCompass compass("data/edges.csv", "data/classes.csv");
 
     // the below is example code for parsing commandline input
     //I am using the example code

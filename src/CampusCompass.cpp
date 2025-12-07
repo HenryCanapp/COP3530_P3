@@ -117,17 +117,21 @@ bool CampusCompass::parseCommand(const std::string& command, std::stringstream& 
     bool composite = false;
     std::string full = "";
     while (ss >> arg) {
-        if (composite) {
-            full += " " + arg;
+        if (arg.front() == '\"') {
+            full = arg;
+            composite = true;
             if (arg.back() == '\"') {
                 composite = false;
                 args.push_back(full);
             }
             continue;
         }
-        if (arg.front() == '\"') {
-            full = arg;
-            composite = true;
+        if (composite) {
+            full += " " + arg;
+            if (arg.back() == '\"') {
+                composite = false;
+                args.push_back(full);
+            }
             continue;
         }
         args.push_back(arg);
@@ -238,7 +242,7 @@ bool CampusCompass::validClassCode(std::string& code) {
 }
 
 bool CampusCompass::validLocID(int id) {
-    if (id > 0 && id < static_cast<int>(graph.size())) {
+    if (id > 0 && id < static_cast<int>(graph.size())+2) {
         return true;
     }
     return false;
@@ -297,6 +301,9 @@ bool CampusCompass::insertStudent(std::vector<std::string>& args, std::stringstr
 
 bool CampusCompass::removeStudent(std::vector<std::string>& args, std::stringstream& out) {
     //checks format
+    if (args.size() != 1) {
+        return false;
+    }
     if (!validUFID(args[0])) {
         return false;
     }
@@ -309,6 +316,9 @@ bool CampusCompass::removeStudent(std::vector<std::string>& args, std::stringstr
 }
 
 bool CampusCompass::dropClass(std::vector<std::string>& args, std::stringstream& out) {
+    if (args.size() != 2) {
+        return false;
+    }
     if (!validUFID(args[0])) {
         return false;
     }
@@ -338,11 +348,19 @@ bool CampusCompass::dropClass(std::vector<std::string>& args, std::stringstream&
 }
 
 bool CampusCompass::replaceClass(std::vector<std::string>& args, std::stringstream& out) {
+    if (args.size() != 3) {
+        return false;
+    }
+
     if (!validUFID(args[0])) {
         return false;
     }
 
-    if (!validClassCode(args[1]) || !validUFID(args[2])) {
+    if (!validClassCode(args[1]) || !validClassCode(args[2])) {
+        return false;
+    }
+
+    if (!students.count(args[0])) {
         return false;
     }
 
@@ -363,6 +381,10 @@ bool CampusCompass::replaceClass(std::vector<std::string>& args, std::stringstre
 }
 
 bool CampusCompass::removeClass(std::vector<std::string>& args, std::stringstream& out) {
+    if (args.size() != 1) {
+        return false;
+    }
+
     if (!validClassCode(args[0])) {
         return false;
     }
@@ -381,6 +403,10 @@ bool CampusCompass::removeClass(std::vector<std::string>& args, std::stringstrea
 }
 
 bool CampusCompass::checkEdgeStatus(std::vector<std::string>& args, std::stringstream& out) {
+    if (args.size() != 2) {
+        return false;
+    }
+
     int from = std::stoi(args[0]);
     int to = std::stoi(args[1]);
     if (!validLocID(from) || !validLocID(to)) {
@@ -399,6 +425,9 @@ bool CampusCompass::checkEdgeStatus(std::vector<std::string>& args, std::strings
 }
 
 bool CampusCompass::toggleEdgesClosure(std::vector<std::string>& args, std::stringstream& out) {
+    if (args.size() < 2) {
+        return false;
+    }
     //checks there are the correct number of arguments
     int n = std::stoi(args[0]);
     if (static_cast<int>(args.size()) != 2*n + 1) {
@@ -446,6 +475,9 @@ bool CampusCompass::toggleEdgesClosure(std::vector<std::string>& args, std::stri
 }
 
 bool CampusCompass::isConnected(std::vector<std::string>& args, std::stringstream& out) {
+    if (args.size() != 2) {
+        return false;
+    }
     int from = std::stoi(args[0]);
     int to = std::stoi(args[1]);
     if (!validLocID(from) || !validLocID(to)) {
@@ -493,12 +525,21 @@ void CampusCompass::updateStudent(std::string& id) {
                 from = dj_list[from].second;
             }
             stu.paths[loc_id] = path;
+        } else {
+            dest.second = -1;
+            stu.paths[loc_id] = std::vector<int>();
         }
     }
 }
 
 bool CampusCompass::printShortestEdges(std::vector<std::string>& args, std::stringstream& out) {
+    if (args.size() != 1) {
+        return false;
+    }
     if (!validUFID(args[0])) {
+        return false;
+    }
+    if (!students.count(args[0])) {
         return false;
     }
     Student& stu = *students[args[0]];
@@ -512,6 +553,7 @@ bool CampusCompass::printShortestEdges(std::vector<std::string>& args, std::stri
 
 std::unordered_map<int, std::vector<std::pair<int, int>>> CampusCompass::findMST(std::set<int>& locations) {
     std::unordered_map<int, std::vector<std::pair<int, int>>> mst;
+    if (locations.empty()) {return mst;}
     //start with an arbitrary location
     int first = *locations.begin();
     mst[first] = std::vector<std::pair<int, int>>();
@@ -548,7 +590,14 @@ std::unordered_map<int, std::vector<std::pair<int, int>>> CampusCompass::findMST
 }
 
 bool CampusCompass::printStudentZone(std::vector<std::string> &args, std::stringstream& out) {
+    if (args.size() != 1) {
+        return false;
+    }
+
     if (!validUFID(args[0])) {
+        return false;
+    }
+    if (!students.count(args[0])) {
         return false;
     }
     //create a set of all the locations traveled to to get to classes
@@ -556,6 +605,9 @@ bool CampusCompass::printStudentZone(std::vector<std::string> &args, std::string
     std::set<int> locations;
     locations.insert(students[args[0]]->residence);
     for (auto it = paths.begin(); it != paths.end(); ++it) {
+        if (it->second.empty()) {
+            continue;
+        }
         locations.insert(it->first);
         for (int fol : it->second) {
             locations.insert(fol);

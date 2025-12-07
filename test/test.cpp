@@ -6,45 +6,6 @@
 
 
 
-// the syntax for defining a test is below. It is important for the name to be
-// unique, but you can group multiple tests with [tags]. A test can have
-// [multiple][tags] using that syntax.
-TEST_CASE("Example Test Name - Change me!", "[tag]") {
-  // instantiate any class members that you need to test here
-  int one = 1;
-
-  // anything that evaluates to false in a REQUIRE block will result in a
-  // failing test
-  REQUIRE(one == 0); // fix me!
-
-  // all REQUIRE blocks must evaluate to true for the whole test to pass
-  REQUIRE(false); // also fix me!
-}
-
-TEST_CASE("Test 2", "[tag]") {
-  // you can also use "sections" to share setup code between tests, for example:
-  int one = 1;
-
-  SECTION("num is 2") {
-    int num = one + 1;
-    REQUIRE(num == 2);
-  };
-
-  SECTION("num is 3") {
-    int num = one + 2;
-    REQUIRE(num == 3);
-  };
-
-  // each section runs the setup code independently to ensure that they don't
-  // affect each other
-}
-
-// You must write 5 unique, meaningful tests for credit on the testing section
-// of this project!
-
-// See the following for an example of how to easily test your output.
-// Note that while this works, I recommend also creating plenty of unit tests for particular functions within your code.
-// This pattern should only be used for final, end-to-end testing.
 
 // This uses C++ "raw strings" and assumes your CampusCompass outputs a string with
 //   the same thing you print.
@@ -138,7 +99,7 @@ Student Zone Cost For John Doe: 20
 )";
   };
 
-  CampusCompass compass("../data/edges.csv", "../data/classes.csv");
+  CampusCompass compass("data/edges.csv", "data/classes.csv");
   std::string actualOutput;
 
   // somehow pass your input into your CampusCompass and parse it to call the
@@ -164,3 +125,239 @@ Student Zone Cost For John Doe: 20
 
   REQUIRE(actualOutput == expectedOutput);
 }
+
+TEST_CASE("Incorrect Commands", "[unit tests]") {
+  std::string input;
+  std::string expectedOutput;
+
+  SECTION("All incorrect") {
+    input = R"(5
+foeifokeok kokf defefe
+that last one was straight gibberish just for fun
+insert "Henry Canapp" 01 1 2 COP3504 EEL3111
+remove 2031
+cropClass 00000001 COP3504
+)";
+
+    expectedOutput = R"(unsuccessful
+unsuccessful
+unsuccessful
+unsuccessful
+unsuccessful
+)";
+  };
+
+  SECTION("Half incorrect") {
+    input = R"(4
+insert "H3nry" 92813206 23 1 COP3504
+insert "Joe Manma" 01201096 3 2 PHY2048 COP3504
+removeClass COP3504
+toggleEdgesClosure 1 34
+)";
+    expectedOutput = R"(unsuccessful
+successful
+1
+unsuccessful
+)";
+  };
+
+  SECTION("More incorrect") {
+    input = R"(3
+printShortestEdges "Henry"
+printStudentZone 1029194827192
+isConnected 18
+)";
+    expectedOutput = R"(unsuccessful
+unsuccessful
+unsuccessful
+)";
+  };
+
+  CampusCompass compass("data/edges.csv", "data/classes.csv");
+  std::string actualOutput;
+
+  // somehow pass your input into your CampusCompass and parse it to call the
+  // correct functions, for example:
+
+  std::stringstream inp(input);
+  int no_of_lines;
+  std::string command;
+  inp >> no_of_lines;
+  inp.ignore(); // ignore newline that first cin left over
+
+  std::stringstream output;
+  for (int i = 0; i < no_of_lines; i++) {
+    while (!command.compare("")) {
+      std::getline(inp, command);
+    }
+    // parse commands and add to the output
+    compass.parseCommand(command, output);
+    command = "";
+  }
+
+  actualOutput = output.str();
+
+  REQUIRE(actualOutput == expectedOutput);
+}
+
+TEST_CASE("Edge Cases", "[unit tests]") {
+  std::string input;
+  std::string expectedOutput;
+  input = R"(7
+insert "person one" 00000001 2 2 COP3504 PHY2049
+remove 00000002
+dropClass 00000001 NUL0000
+replaceClass 00000001 PHY2049 COP3504
+toggleEdgesClosure 4 2 54 2 1 2 4 2 50
+printShortestEdges 00000001
+printStudentZone 00000001
+)";
+  expectedOutput = R"(successful
+unsuccessful
+unsuccessful
+unsuccessful
+successful
+Name: person one
+COP3504 | Total Time: -1
+PHY2049 | Total Time: -1
+Student Zone Cost For person one: 0
+)";
+
+  CampusCompass compass("data/edges.csv", "data/classes.csv");
+  std::string actualOutput;
+
+  // somehow pass your input into your CampusCompass and parse it to call the
+  // correct functions, for example:
+
+  std::stringstream inp(input);
+  int no_of_lines;
+  std::string command;
+  inp >> no_of_lines;
+  inp.ignore(); // ignore newline that first cin left over
+
+  std::stringstream output;
+  for (int i = 0; i < no_of_lines; i++) {
+    while (!command.compare("")) {
+      std::getline(inp, command);
+    }
+    // parse commands and add to the output
+    compass.parseCommand(command, output);
+    command = "";
+  }
+
+  actualOutput = output.str();
+
+  REQUIRE(actualOutput == expectedOutput);
+}
+
+TEST_CASE("Benchmarks", "[unit tests]") {
+  std::string input;
+  std::string expectedOutput;
+  SECTION("Remove class functions"){
+    input = R"(9
+insert "stu uno" 00000001 1 3 PHY2048 COP3504 MAC2313
+insert "stu dos" 00000002 36 1 PHY2048
+insert "stu tres" 00000003 18 4 PHY2049 COP3504 MAC2313 CDA3101
+dropClass 00000003 MAC2313
+removeClass PHY2048
+replaceClass 00000003 PHY2049 PHY2048
+removeClass PHY2048
+remove 00000002
+remove 00000003
+)";
+    expectedOutput = R"(successful
+successful
+successful
+successful
+2
+successful
+1
+unsuccessful
+successful
+)";
+  };
+
+  SECTION("trapping a student (me)"){
+    input = R"(4
+insert "Henry Canapp" 92813206 3 4 PHY2049 COT3100 COP3530 EEL3111
+printShortestEdges 92813206
+toggleEdgesClosure 1 49 56
+printShortestEdges 92813206
+)";
+    expectedOutput = R"(successful
+Name: Henry Canapp
+COP3530 | Total Time: 17
+COT3100 | Total Time: 19
+EEL3111 | Total Time: 16
+PHY2049 | Total Time: 17
+successful
+Name: Henry Canapp
+COP3530 | Total Time: 17
+COT3100 | Total Time: 19
+EEL3111 | Total Time: 16
+PHY2049 | Total Time: -1
+)";
+  };
+  CampusCompass compass("data/edges.csv", "data/classes.csv");
+  std::string actualOutput;
+
+  // somehow pass your input into your CampusCompass and parse it to call the
+  // correct functions, for example:
+
+  std::stringstream inp(input);
+  int no_of_lines;
+  std::string command;
+  inp >> no_of_lines;
+  inp.ignore(); // ignore newline that first cin left over
+
+  std::stringstream output;
+  for (int i = 0; i < no_of_lines; i++) {
+    while (!command.compare("")) {
+      std::getline(inp, command);
+    }
+    // parse commands and add to the output
+    compass.parseCommand(command, output);
+    command = "";
+  }
+
+  actualOutput = output.str();
+
+  REQUIRE(actualOutput == expectedOutput);
+}
+
+/*
+TEST_CASE("Template Test", "[template]") {
+  std::string input;
+  std::string expectedOutput;
+  SECTION(""){
+  input = R"()";
+  expectedOutput = R"()";
+};
+
+CampusCompass compass("../data/edges.csv", "../data/classes.csv");
+std::string actualOutput;
+
+// somehow pass your input into your CampusCompass and parse it to call the
+// correct functions, for example:
+
+std::stringstream inp(input);
+int no_of_lines;
+std::string command;
+inp >> no_of_lines;
+inp.ignore(); // ignore newline that first cin left over
+
+std::stringstream output;
+for (int i = 0; i < no_of_lines; i++) {
+  while (!command.compare("")) {
+    std::getline(inp, command);
+  }
+  // parse commands and add to the output
+  compass.parseCommand(command, output);
+  command = "";
+}
+
+actualOutput = output.str();
+
+REQUIRE(actualOutput == expectedOutput);
+}
+*/
